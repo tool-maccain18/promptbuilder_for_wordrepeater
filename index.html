@@ -9,21 +9,44 @@
 body {
   font-family: system-ui;
   margin:0;
-  padding:16px;
+  padding:12px;
   background:#f5f8fb;
 }
+
 .card{
   background:#fff;
-  padding:14px;
+  padding:12px;
   border-radius:12px;
-  margin-bottom:14px;
+  margin-bottom:12px;
   box-shadow:0 4px 12px rgba(0,0,0,0.1);
 }
+
+/* ✅ 幅を少し抑える */
 input, textarea{
-  width:100%;
+  width:95%;
   padding:10px;
   margin-bottom:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
 }
+
+/* ✅ 出力エリアを大きく */
+#output{
+  height:180px; /* 約6行 */
+}
+
+/* 整形後も同様 */
+#cleanOutput{
+  height:160px;
+}
+
+/* ✅ 単語2列 */
+#wordInputs{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+}
+
 button{
   width:100%;
   padding:12px;
@@ -33,12 +56,16 @@ button{
   border:none;
   border-radius:8px;
 }
+
 .row{
   display:flex;
-  gap:8px;
+  gap:6px;
 }
-.row button{ flex:1; }
+.row button{
+  flex:1;
+}
 </style>
+``
 </head>
 
 <body>
