@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プロンプト生成＋整形ツール</title>
+
+<style>
+body {
+  font-family: system-ui;
+  margin:0;
+  padding:16px;
+  background:#f5f8fb;
+}
+.card{
+  background:#fff;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:14px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+input, textarea{
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+}
+button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  background:#4ea1ff;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+}
+.row{
+  display:flex;
+  gap:8px;
+}
+.row button{ flex:1; }
+</style>
+</head>
+
+<body>
+
+<h2>プロンプト生成＋整形ツール</h2>
+
+<div class="card">
+  <label>グループ名</label>
+  <input id="groupName">
+</div>
+
+<div class="card">
+  <label>
+    <input type="checkbox" id="imageMode">
+    画像の単語リストを使う（手入力は補助）
+  </label>
+</div>
+
+<div class="card">
+  <label>単語（最大20／任意）</label>
+  <div id="wordInputs"></div>
+</div>
+
+<button onclick="generate()">プロンプト生成</button>
+
+<div class="card">
+  <textarea id="output"></textarea>
+  <div class="row">
+    <button onclick="copyAll()">コピー</button>
+  </div>
+</div>
+
+<div class="card">
+  <label>生成結果整形</label>
+  <textarea id="rawInput"></textarea>
+
+  <div class="row">
+    <button onclick="clean()">整形</button>
+    <button onclick="copyClean()">コピー</button>
+  </div>
+
+  <textarea id="cleanOutput"></textarea>
+</div>
+
+<script>
+let latest="";
+
+// 単語入力生成
+for(let i=0;i<20;i++){
+  const input=document.createElement("input");
+  input.placeholder=`単語 ${i+1}`;
+  input.className="word";
+  wordInputs.appendChild(input);
+}
+
+function getWords(){
+  return [...document.querySelectorAll(".word")]
+    .map(i=>i.value.trim())
+    .filter(v=>v);
+}
+
+function generate(){
+  const words=getWords();
+  const group=document.getElementById("groupName").value;
+  const imageMode=document.getElementById("imageMode").checked;
+
+  let wordSection="";
+
+  if(imageMode){
+    if(words.length>0){
+      wordSection=`
+【対象データ】
+・添付画像内の単語リストを使用する
+
+【補助単語（参考）】
+${words.join("\n")}
+
+【指示】
+・画像を優先して単語を読み取る
+・補助単語は判読補助として使用
+`;
+    }else{
+      wordSection=`
+【対象データ】
+・添付画像内の単語リストを使用する
+
+【指示】
+・画像から単語を正確に読み取る
+・判読可能なもののみ使用する
+`;
+    }
+  }else{
+    wordSection=`
+【対象単語】
+${words.join("\n")}
+`;
+  }
+
+const prompt=`以下の方針で英単語リストを作成してください。
+
+【形式】
+単語 | 例文 | グルーピング
+
+【例文の条件】
+・英語で記述
+・10語以内
+・必ず文末にピリオドを付ける
+・具体的な状況がイメージできる文にする
+
+【安定化のための補足】
+・各単語につき例文は1つ
+・入力順を維持する
+・単語を改変しない
+・説明文は出力しない
+
+${wordSection}
+
+【グループ名】
+${group}`;
+
+  document.getElementById("output").value=prompt;
+  latest=prompt;
+}
+
+function copyAll(){
+  navigator.clipboard.writeText(latest);
+}
+
+// 整形
+function clean(){
+  const raw=document.getElementById("rawInput").value;
+
+  const cleaned=raw.split("\n")
+    .map(l=>l.trim())
+    .filter(l=>{
+      const parts=l.split("|");
+      return parts.length===3;
+    })
+    .map(l=>l.split("|").map(s=>s.trim()).join(" | "));
+
+  document.getElementById("cleanOutput").value=cleaned.join("\n");
+}
+
+function copyClean(){
+  navigator.clipboard.writeText(
+    document.getElementById("cleanOutput").value
+  );
+}
+</script>
+
+</body>
+</html>
